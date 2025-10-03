@@ -7,33 +7,18 @@
 <style>
   body { margin:0; font-family: Arial; }
   #sandbox { padding: 20px; background: white; min-height: 100vh; }
-  /* Chat button */
   #chatButton {
-    position: fixed;
-    bottom: 20px;
-    right: 20px;
-    width: 60px; height: 60px;
-    border-radius: 50%;
-    background: #007bff;
-    color: white;
-    font-size: 30px;
-    border: none;
-    cursor: pointer;
+    position: fixed; bottom: 20px; right: 20px;
+    width: 60px; height: 60px; border-radius: 50%;
+    background: #007bff; color: white; font-size: 30px; border: none; cursor: pointer;
     z-index: 999;
   }
-  /* Chat panel */
   #chatPanel {
     display: none;
-    position: fixed;
-    bottom: 90px;
-    right: 20px;
-    width: 300px;
-    max-height: 400px;
-    background: #f1f1f1;
-    border: 1px solid #ccc;
-    border-radius: 10px;
-    flex-direction: column;
-    z-index: 999;
+    position: fixed; bottom: 90px; right: 20px;
+    width: 300px; max-height: 400px; background: #f1f1f1;
+    border: 1px solid #ccc; border-radius: 10px;
+    flex-direction: column; z-index: 999;
   }
   #messages { flex: 1; overflow-y: auto; padding: 10px; }
   #input { padding: 5px; width: calc(100% - 10px); margin: 5px; box-sizing: border-box; }
@@ -53,7 +38,7 @@
 </div>
 
 <script>
-let apiKey = prompt("Enter your OpenAI API key:");
+let apiKey = prompt("Enter your OpenAI API key:"); // Prompt at the beginning
 
 const sandbox = document.getElementById('sandbox');
 const chatButton = document.getElementById('chatButton');
@@ -65,7 +50,6 @@ chatButton.addEventListener('click', () => {
   chatPanel.style.display = chatPanel.style.display === 'flex' ? 'none' : 'flex';
 });
 
-// Add chat messages
 function addMessage(from, text) {
   const p = document.createElement('p');
   p.className = 'message ' + from;
@@ -74,7 +58,6 @@ function addMessage(from, text) {
   messages.scrollTop = messages.scrollHeight;
 }
 
-// Parse GPT text safely
 function applyGPTCommand(text) {
   const lower = text.toLowerCase();
   if (lower.includes('add text')) {
@@ -96,10 +79,11 @@ function applyGPTCommand(text) {
   }
 }
 
-// Call OpenAI API
 async function getGPTResponse(promptText) {
   try {
-    const res = await fetch("https://api.openai.com/v1/chat/completions", {
+    // Use a CORS proxy for testing only
+    const proxyUrl = "https://cors-anywhere.herokuapp.com/";
+    const res = await fetch(proxyUrl + "https://api.openai.com/v1/chat/completions", {
       method: "POST",
       headers: {
         "Authorization": `Bearer ${apiKey}`,
@@ -112,7 +96,6 @@ async function getGPTResponse(promptText) {
       })
     });
     const data = await res.json();
-    // Check if data.choices exists
     if (data.choices && data.choices[0] && data.choices[0].message) {
       return data.choices[0].message.content;
     } else {
@@ -123,7 +106,6 @@ async function getGPTResponse(promptText) {
   }
 }
 
-// Handle input
 input.addEventListener('keydown', async (e) => {
   if (e.key === 'Enter') {
     const text = input.value;
