@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>GPT Sandbox Frontend</title>
+<style>
+  body { display: flex; height: 100vh; margin: 0; font-family: Arial; }
+  #sandbox { flex: 1; background: white; padding: 20px; overflow-y: auto; }
+  #chat { flex: 1; border-left: 1px solid #ccc; display: flex; flex-direction: column; padding: 10px; }
+  #messages { flex: 1; overflow-y: auto; margin-bottom: 10px; }
+  input { padding: 5px; width: 100%; box-sizing: border-box; }
+  .message.user { text-align: right; color: blue; }
+  .message.ai { text-align: left; color: green; }
+</style>
+</head>
+<body>
+
+<div id="sandbox"><h2>Sandbox</h2></div>
+
+<div id="chat">
+  <div id="messages"></div>
+  <input id="input" type="text" placeholder="Type command..." />
+</div>
+
+<script>
+let apiKey = prompt("Enter your OpenAI API key:");
+
+// DOM elements
+const input = document.getElementById('input');
+const messages = document.getElementById('messages');
+const sandbox = document.getElementById('sandbox');
+
+function addMessage(from, text) {
+  const p = document.createElement('p');
+  p.className = 'message ' + from;
+  p.textContent = text;
+  messages.appendChild(p);
+  messages.scrollTop = messages.scrollHeight;
+}
+
+// Parse GPT output into controlled commands
+function applyGPTCommand(text) {
+  const lower = text.toLowerCase();
+  if (lower.includes('add text')) {
+    const match = text.match(/add text[:]? (.+)/i);
+    const value = match ? match[1] : 'New Text';
+    const p = document.createElement('p');
+    p.textContent = value;
+    sandbox.appendChild(p);
+  } else if (lower.includes('change text color')) {
+    const match = text.match(/change text color[:]? (\w+)/i);
+    const color = match ? match[1] : 'black';
+    Array.from(sandbox.querySelectorAll('p, h1, h2, h3, span')).forEach(el => {
+      el.style.color = color;
+    });
+  } else if (lower.includes('change background')) {
+    const match = text.match(/change background[:]? (\w+)/i);
+    const color = match ? match[1] : 'white';
+    sandbox.style.backgroundColor = color;
+  }
+}
+
+// Call OpenAI API from frontend
+async function getGPTResponse(promptText) {
+  const res = await fetch("https://api.openai.com/v1/chat/completions", {
+    method: "POST",
+    headers: {
+      "Authorization": `Bearer ${apiKey}`,
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      model: "gpt-4",
+      messages: [{ role: "user", content: promptText }],
+      temperature: 0.7
+    })
+  });
+  const data = await res.json();
+  return data.choices[0].message.content;
+}
+
+// Chat input handler
+input.addEventListener('keydown', async (e) => {
+  if (e.key === 'Enter') {
+    const text = input.value;
+    input.value = '';
+    addMessage('user', text);
+
+    try {
+      const gptText = await getGPTResponse(text);
+      addMessage('ai', gptText);
+      applyGPTCommand(gptText);
+    } catch (err) {
+      addMessage('ai', 'Error: ' + err.message);
+    }
+  }
+});
+</script>
+
+</body>
+</html>
